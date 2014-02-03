@@ -1,0 +1,7 @@
+CREATE TABLE user (
+  userName varchar(20),
+  name varchar(20),
+  telephone int,
+  address varchar(255),
+  primary key (userName)
+);
