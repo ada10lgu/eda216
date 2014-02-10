@@ -268,6 +268,19 @@ public class BookingPane extends BasicPane {
 			String movieName = nameList.getSelectedValue();
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
+			String query = "Select * from venue as v "
+					+ "LEFT JOIN theatre as t on v.theatre=t.name "
+					+ "where movie=" + "\"" + nameList.getSelectedValue() 
+					+ "\"" + "and date=" + dateList.getSelectedValue() + "\"";
+			rs = db.query(query);
+//			try {
+//				while(rs.next()){
+//					something.addElement(rs.getString(1));
+//				}
+//			} catch (SQLException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		}
 	}
 
