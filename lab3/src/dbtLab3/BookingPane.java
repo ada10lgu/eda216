@@ -19,6 +19,9 @@ public class BookingPane extends BasicPane {
 	private ResultSet rs;
 	CurrentUser instance;
 	int rowCount;
+	int seatsAvailable;
+	int movieId;
+	String date;
 	
 	private static final long serialVersionUID = 1;
 	/**
@@ -87,6 +90,9 @@ public class BookingPane extends BasicPane {
 		rs = null;
 		instance = CurrentUser.instance();
 		rowCount = 0;
+		seatsAvailable = 0;
+		movieId = 0;
+		date = "";
 	}
 
 	/**
@@ -265,22 +271,45 @@ public class BookingPane extends BasicPane {
 			if (nameList.isSelectionEmpty() || dateList.isSelectionEmpty()) {
 				return;
 			}
+			
 			String movieName = nameList.getSelectedValue();
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
 			String query = "Select * from venue as v "
 					+ "LEFT JOIN theatre as t on v.theatre=t.name "
 					+ "where movie=" + "\"" + nameList.getSelectedValue() 
-					+ "\"" + "and date=" + dateList.getSelectedValue() + "\"";
+					+ "\"" + " and date=" + "\"" + dateList.getSelectedValue() + "\"";
 			rs = db.query(query);
-//			try {
-//				while(rs.next()){
-//					something.addElement(rs.getString(1));
-//				}
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			
+			try {
+				if(rs.next()){
+					seatsAvailable = Integer.parseInt(rs.getString(6));
+					movieId = Integer.parseInt(rs.getString(1));
+					date = rs.getString(2);
+					fields[0].setText(rs.getString(3));
+					fields[1].setText(rs.getString(2));
+					fields[2].setText(rs.getString(4));
+					
+				}
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			/**
+			 * Seperate query for # of seats availalble
+			 */
+			query = "select count(*) from reservation where id=" + "\"" + Integer.toString(movieId) + "\"";
+			rs = db.query(query);
+			try {
+				if(rs.next()){	
+					seatsAvailable =seatsAvailable - Integer.parseInt(rs.getString(1)); 
+					fields[3].setText(Integer.toString(seatsAvailable));
+				}
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 	}
 
@@ -307,6 +336,11 @@ public class BookingPane extends BasicPane {
 			String movieName = nameList.getSelectedValue();
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
+			if(seatsAvailable > 0){
+				String query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
+				db.update(query);
+			}
+
 		}
 	}
 }

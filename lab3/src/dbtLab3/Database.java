@@ -87,5 +87,18 @@ public class Database {
 		return rs; 
 	}
 	/* --- insert own code here --- */
+	public void update(String str){
+		try {
+			stmt = conn.createStatement();
+//									ResultSet.TYPE_SCROLL_INSENSITIVE,
+//									ResultSet.CONCUR_READ_ONLY);
+			stmt.executeUpdate(str);
 
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	
+	}
 }
