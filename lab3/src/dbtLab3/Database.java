@@ -102,7 +102,7 @@ public class Database {
 				result.add(rs.getString(3));
 				result.add(rs.getString(2));
 				result.add(rs.getString(4));
-				result.add(rs.getString(1));
+//				result.add(rs.getString(1));
 				movieId = rs.getString(1);
 				seatsAvailable = Integer.parseInt(rs.getString(6));
 			}
@@ -110,6 +110,7 @@ public class Database {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
 		return result;
 	}
 	
@@ -119,7 +120,7 @@ public class Database {
 		 * Seperate query for # of seats availalble
 		 */
 		result.clear();
-		query = "select count(*) from reservation where id=" + "\"" + movieId + "\"";
+		query = "select count(*) from reservation where venue=" + "\"" + movieId + "\"";
 		
 		runSQL(query);
 		try {
@@ -167,11 +168,14 @@ public class Database {
 		return result;
 	}
 	
-	public void booking(String query){
+	public boolean booking(CurrentUser instance){
+		query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
 		if(seatsAvailable > 0){
 			
 			update(query);
+			return true;
 		}
+		return false;
 	}
 	
 	/**
@@ -203,11 +207,12 @@ public class Database {
 	/* --- insert own code here --- */
 	public void update(String str){
 		try {
+			System.out.println("helo al");
 			stmt = conn.createStatement();
 //									ResultSet.TYPE_SCROLL_INSENSITIVE,
 //									ResultSet.CONCUR_READ_ONLY);
 			stmt.executeUpdate(str);
-
+			System.out.println("helo al2");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

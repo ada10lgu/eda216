@@ -280,11 +280,12 @@ public class BookingPane extends BasicPane {
 					+ "\"" + " and date=" + "\"" + dateList.getSelectedValue() + "\"";
 
 			results = db.dateChanged(query);
+
 			fields[0].setText(results.get(0));
 			fields[1].setText(results.get(1));
 			fields[2].setText(results.get(2));
-			movieId = results.get(3);
-			query = "select count(*) from reservation where id=" + "\"" + movieId + "\"";
+//			movieId = results.get(3);
+//			query = "select count(*) from reservation where id=" + "\"" + movieId + "\"";
 			results = db.dateChangedCountSeats();
 			fields[3].setText(results.get(0));
 		}
@@ -313,10 +314,13 @@ public class BookingPane extends BasicPane {
 			String movieName = nameList.getSelectedValue();
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
-			String query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
-			db.booking(query);
-			results = db.dateChangedCountSeats();
-			fields[3].setText(results.get(0));
+			
+			if(db.booking(instance)){
+				db.dateChangedCountSeats();
+				
+				fields[3].setText(Integer.toString(Integer.parseInt(fields[3].getText()) - 1));	
+			}
+			
 		}
 	}
 }
