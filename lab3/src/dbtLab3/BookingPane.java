@@ -315,10 +315,15 @@ public class BookingPane extends BasicPane {
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
 			
-			if(db.booking(instance)){
-				db.dateChangedCountSeats();
-				
-				fields[3].setText(Integer.toString(Integer.parseInt(fields[3].getText()) - 1));	
+			try {
+				if(db.booking(instance)){
+					db.dateChangedCountSeats();
+					
+					fields[3].setText(Integer.toString(Integer.parseInt(fields[3].getText()) - 1));	
+				}
+			} catch (NumberFormatException | SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 			
 		}

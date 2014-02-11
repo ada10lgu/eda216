@@ -168,11 +168,14 @@ public class Database {
 		return result;
 	}
 	
-	public boolean booking(CurrentUser instance){
-		query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
+	public boolean booking(CurrentUser instance) throws SQLException{
+		query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ") FOR UPDATE;";
 		if(seatsAvailable > 0){
 			
 			update(query);
+			if(seatsAvailable <0){
+				conn.rollback();
+			}
 			return true;
 		}
 		return false;
@@ -207,12 +210,11 @@ public class Database {
 	/* --- insert own code here --- */
 	public void update(String str){
 		try {
-			System.out.println("helo al");
 			stmt = conn.createStatement();
-//									ResultSet.TYPE_SCROLL_INSENSITIVE,
-//									ResultSet.CONCUR_READ_ONLY);
+//									ResultSet.TYPE_FORWARD_ONLY,
+//									ResultSet.CONCUR_UPDATABLE);
 			stmt.executeUpdate(str);
-			System.out.println("helo al2");
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
