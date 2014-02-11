@@ -91,26 +91,20 @@ public class UserLoginPane extends BasicPane {
 		 *            The event object (not used).
 		 */
 		public void actionPerformed(ActionEvent e) {
-
+			String currentUser;
 			String userId = fields[USER_ID].getText();
-			try {
+			String query = "Select userName from user where userName=\"" + userId + "\""+ ";";
+			currentUser = db.userLogedOn(query);
 
-				String query = "Select userName from user where userName=\"" + userId + "\""+ ";";
-				rs = db.query(query);
-				rs.first();
-				String checkUser = rs.getString(1);
-				
-				if (checkUser.equals(userId)){
-					displayMessage("User " + userId + " logged in successfully");
-					instance.loginAs(userId);
+			if (currentUser.equals(userId)){
+				displayMessage("User " + userId + " logged in successfully");
+				instance.loginAs(userId);
 
-				}
-				
-			} catch (SQLException e1) {
+			}else{
+			
 				displayMessage("No such user in database");
 				// TODO Auto-generated catch block
 				System.out.println("SQL Exception");
-				e1.printStackTrace();
 			}
 			/* --- insert own code here --- */
 		}

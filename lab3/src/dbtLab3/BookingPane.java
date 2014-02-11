@@ -7,6 +7,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * The GUI pane where a user books tickets for movie performances. It contains
@@ -16,12 +18,13 @@ import java.sql.SQLException;
  * can click to book a ticket to the selected performance.
  */
 public class BookingPane extends BasicPane {
-	private ResultSet rs;
+
 	CurrentUser instance;
-	int rowCount;
-	int seatsAvailable;
-	int movieId;
-	String date;
+//	int rowCount;
+//	int seatsAvailable;
+	String movieId;
+//	String date;
+	ArrayList<String> results;
 	
 	private static final long serialVersionUID = 1;
 	/**
@@ -87,12 +90,13 @@ public class BookingPane extends BasicPane {
 	 */
 	public BookingPane(Database db) {
 		super(db);
-		rs = null;
+
 		instance = CurrentUser.instance();
-		rowCount = 0;
-		seatsAvailable = 0;
-		movieId = 0;
-		date = "";
+//		rowCount = 0;
+//		seatsAvailable = 0;
+		movieId = "";
+//		date = "";
+		results = new ArrayList<String>();
 	}
 
 	/**
@@ -189,16 +193,14 @@ public class BookingPane extends BasicPane {
 		/* --- insert own code here --- */
 		nameListModel.removeAllElements();
 		String query = "Select * from venue group by movie";
-		rs = db.query(query);
+		results.clear();
+		System.out.println("before fillnamelist(query)");
+		results = db.fillNameList(query);
 
-		try {
-			while(rs.next()){
-				nameListModel.addElement(rs.getString(3));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		for(String s: results){
+			nameListModel.addElement(s);
 		}
+		
 
 	}
 	
@@ -210,16 +212,13 @@ public class BookingPane extends BasicPane {
 		/* --- insert own code here --- */
 		dateListModel.removeAllElements();
 		String query = "Select date from venue where movie=" + "\"" + movieName + "\"";
-		rs = db.query(query);
-
-		try {
-			while(rs.next()){
-				dateListModel.addElement(rs.getString(1));
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		results = db.fillDateList(query);
+		for(String s: results){
+			dateListModel.addElement(s);
 		}
+			
+		
+
 	}
 
 	/**
@@ -279,37 +278,15 @@ public class BookingPane extends BasicPane {
 					+ "LEFT JOIN theatre as t on v.theatre=t.name "
 					+ "where movie=" + "\"" + nameList.getSelectedValue() 
 					+ "\"" + " and date=" + "\"" + dateList.getSelectedValue() + "\"";
-			rs = db.query(query);
-			
-			try {
-				if(rs.next()){
-					seatsAvailable = Integer.parseInt(rs.getString(6));
-					movieId = Integer.parseInt(rs.getString(1));
-					date = rs.getString(2);
-					fields[0].setText(rs.getString(3));
-					fields[1].setText(rs.getString(2));
-					fields[2].setText(rs.getString(4));
-					
-				}
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-			/**
-			 * Seperate query for # of seats availalble
-			 */
-			query = "select count(*) from reservation where id=" + "\"" + Integer.toString(movieId) + "\"";
-			rs = db.query(query);
-			try {
-				if(rs.next()){	
-					seatsAvailable =seatsAvailable - Integer.parseInt(rs.getString(1)); 
-					fields[3].setText(Integer.toString(seatsAvailable));
-				}
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+
+			results = db.dateChanged(query);
+			fields[0].setText(results.get(0));
+			fields[1].setText(results.get(1));
+			fields[2].setText(results.get(2));
+			movieId = results.get(3);
+			query = "select count(*) from reservation where id=" + "\"" + movieId + "\"";
+			results = db.dateChangedCountSeats();
+			fields[3].setText(results.get(0));
 		}
 	}
 
@@ -336,11 +313,10 @@ public class BookingPane extends BasicPane {
 			String movieName = nameList.getSelectedValue();
 			String date = dateList.getSelectedValue();
 			/* --- insert own code here --- */
-			if(seatsAvailable > 0){
-				String query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
-				db.update(query);
-			}
-
+			String query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ");";
+			db.booking(query);
+			results = db.dateChangedCountSeats();
+			fields[3].setText(results.get(0));
 		}
 	}
 }
