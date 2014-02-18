@@ -1,19 +1,17 @@
 package dbtLab3;
 
-import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-import com.mysql.jdbc.Statement;
-
-import java.awt.event.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JTextField;
 
 /**
  * The GUI pane where a new user logs in. Contains a text field where the user
  * id is entered and a button to log in.
  */
 public class UserLoginPane extends BasicPane {
-	private ResultSet rs;
 	CurrentUser instance;
 	
 	private static final long serialVersionUID = 1;
@@ -40,7 +38,6 @@ public class UserLoginPane extends BasicPane {
 	 */
 	public UserLoginPane(Database db) {
 		super(db);
-		rs = null;
 		instance = CurrentUser.instance();
 	}
 
@@ -96,17 +93,15 @@ public class UserLoginPane extends BasicPane {
 			String query = "Select userName from user where userName=\"" + userId + "\""+ ";";
 			currentUser = db.userLogedOn(query);
 
-			if (currentUser.equals(userId)){
+			if (currentUser != null && currentUser.equals(userId)){
 				displayMessage("User " + userId + " logged in successfully");
 				instance.loginAs(userId);
 
 			}else{
 			
 				displayMessage("No such user in database");
-				// TODO Auto-generated catch block
-				System.out.println("SQL Exception");
+				System.err.println("SQL Exception: No such user in database");
 			}
-			/* --- insert own code here --- */
 		}
 	}
 }

@@ -15,11 +15,9 @@ public class Database {
 	private Statement stmt;
 	private ResultSet rs;
 	private ArrayList<String> result;
-	private int rowCount;
 	private int seatsAvailable;
 	private String movieId;
-	private String date;
-	private String query;
+
 	/**
 	 * Create the database interface object. Connection to the database is
 	 * performed later.
@@ -29,11 +27,8 @@ public class Database {
 		conn = null;
 		rs = null;
 		result = new ArrayList<String>();
-		rowCount = 0;
 		seatsAvailable = 0;
 		movieId = "";
-		date = null;
-		query = "";
 	}
 
 	/**
@@ -77,110 +72,107 @@ public class Database {
 		conn = null;
 	}
 
-	public ArrayList<String> fillDateList(String query){
+	public ArrayList<String> fillDateList(String query) {
 		runSQL(query);
 		result.clear();
 		try {
-			while(rs.next()){
+			while (rs.next()) {
 				result.add(rs.getString(1));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return result;
 	}
-	
-	public ArrayList<String> dateChanged(String query){
+
+	public ArrayList<String> dateChanged(String query) {
 		result.clear();
 		runSQL(query);
 		try {
-			if(rs.next()){
-//				seatsAvailable = Integer.parseInt(rs.getString(6));
-//				movieId = Integer.parseInt(rs.getString(1));
-				date = rs.getString(2);
+			if (rs.next()) {
+				// seatsAvailable = Integer.parseInt(rs.getString(6));
+				// movieId = Integer.parseInt(rs.getString(1));
 				result.add(rs.getString(3));
 				result.add(rs.getString(2));
 				result.add(rs.getString(4));
-//				result.add(rs.getString(1));
+				// result.add(rs.getString(1));
 				movieId = rs.getString(1);
 				seatsAvailable = Integer.parseInt(rs.getString(6));
 			}
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		return result;
 	}
-	
-	public ArrayList<String> dateChangedCountSeats(){
-		
+
+	public ArrayList<String> dateChangedCountSeats() {
+
 		/**
 		 * Seperate query for # of seats availalble
 		 */
 		result.clear();
-		query = "select count(*) from reservation where venue=" + "\"" + movieId + "\"";
-		
+		String query = "select count(*) from reservation where venue=" + "\""
+				+ movieId + "\"";
+
 		runSQL(query);
 		try {
-			if(rs.next()){	
-				seatsAvailable =seatsAvailable - Integer.parseInt(rs.getString(1)); 
-				System.out.println(seatsAvailable + " " + rs.getString(1));
+			if (rs.next()) {
+				seatsAvailable = seatsAvailable
+						- Integer.parseInt(rs.getString(1));
 			}
 		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		result.add(Integer.toString(seatsAvailable));
 		return result;
 	}
-	
-	public String userLogedOn(String query){
+
+	public String userLogedOn(String query) {
 		String checkUser = null;
 		try {
 
 			runSQL(query);
-			rs.first();
-			checkUser = rs.getString(1);
-									
+			if (rs.first()) {
+				checkUser = rs.getString(1);
+				return checkUser;
+			}
+
 		} catch (SQLException e1) {
-			
-			// TODO Auto-generated catch block
-			System.out.println("SQL Exception");
 			e1.printStackTrace();
 		}
-		return checkUser;
-		
+		return null;
+
 	}
-	public ArrayList<String> fillNameList(String query){
+
+	public ArrayList<String> fillNameList(String query) {
 		runSQL(query);
 		result.clear();
 		try {
 
-			while(rs.next()){
+			while (rs.next()) {
 				result.add(rs.getString(3));
 			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return result;
 	}
-	
-	public boolean booking(CurrentUser instance) throws SQLException{
-		query = "INSERT INTO reservation(venue,user) VALUES (" + movieId + "," + "\"" + instance.getCurrentUserId() + "\"" + ") FOR UPDATE;";
-		if(seatsAvailable > 0){
-			
-			update(query);
-			if(seatsAvailable <0){
-				conn.rollback();
-			}
-			return true;
-		}
-		return false;
+
+	public boolean booking(CurrentUser instance) throws SQLException {
+		String query = "INSERT INTO reservation (venue, user) "
+				+ "SELECT ?, ? FROM reservation "
+				+ "WHERE (SELECT ("
+				+ "SELECT seats FROM theatre as t LEFT join venue as v on v.theatre = t.name WHERE v.id = ?)-("
+				+ "SELECT COUNT(*) FROM reservation as r left join venue as v on v.id = r.venue WHERE v.id = ?) as seats) > 0 "
+				+ "LIMIT 1";
+
+		int rows = update(query, movieId, instance.getCurrentUserId(), movieId,
+				movieId);
+
+		return rows > 0;
 	}
-	
+
 	/**
 	 * Check if the connection to the database has been established
 	 * 
@@ -190,36 +182,43 @@ public class Database {
 		return conn != null;
 	}
 
-	public void runSQL(String str){
-		
+	public void runSQL(String str) {
+
 		try {
 			stmt = conn.createStatement();
-//									ResultSet.TYPE_SCROLL_INSENSITIVE,
-//									ResultSet.CONCUR_READ_ONLY);
-			rs= stmt.executeQuery(str);
+			// ResultSet.TYPE_SCROLL_INSENSITIVE,
+			// ResultSet.CONCUR_READ_ONLY);
+			rs = stmt.executeQuery(str);
 			rs.beforeFirst();
 
-//			rs.first();
+			// rs.first();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-
 			e.printStackTrace();
 		}
 
 	}
+
 	/* --- insert own code here --- */
-	public void update(String str){
+	public int update(String sql, Object... o) {
+
 		try {
-			stmt = conn.createStatement();
-//									ResultSet.TYPE_FORWARD_ONLY,
-//									ResultSet.CONCUR_UPDATABLE);
-			stmt.executeUpdate(str);
+			PreparedStatement stmt = conn.prepareStatement(sql);
+
+			for (int i = 0; i < o.length; i++) {
+				switch (o[i].getClass().toString()) {
+				case "class java.lang.Integer":
+					stmt.setInt(i + 1, (int) o[i]);
+					break;
+				default:
+					stmt.setString(i + 1, o[i].toString());
+				}
+			}
+
+			return stmt.executeUpdate();
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-	
+		return 0;
 	}
 }
