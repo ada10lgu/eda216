@@ -281,7 +281,6 @@ public class BookingPane extends BasicPane {
 				return;
 			}
 			
-			/* --- insert own code here --- */
 			String query = "Select * from venue as v "
 					+ "LEFT JOIN theatre as t on v.theatre=t.name "
 					+ "where movie=" + "\"" + nameList.getSelectedValue() 
